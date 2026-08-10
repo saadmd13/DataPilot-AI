@@ -1,0 +1,25 @@
+# ==========================================
+# DataPilot AI - Phase 1 Dependencies
+# ==========================================
+
+# Web API
+fastapi
+uvicorn[standard]
+
+# Frontend
+streamlit
+requests
+
+# Data processing
+pandas
+numpy
+openpyxl
+
+# Configuration
+python-dotenv
+pydantic
+pydantic-settings
+
+# Testing
+pytest
+httpx
