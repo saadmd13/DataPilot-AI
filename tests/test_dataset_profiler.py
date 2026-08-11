@@ -176,3 +176,62 @@ def test_text_is_not_datetime():
         column.datetime_parse_success_rate
         == 0.0
     )
+def test_email_pattern_detection():
+    dataframe = pd.DataFrame(
+        {
+            "email": [
+                "saad@gmail.com",
+                "john@yahoo.com",
+                "aisha@example.com",
+                "user@test.org",
+            ]
+        }
+    )
+
+    profiler = DatasetProfiler()
+
+    profile = profiler.profile(
+        dataframe
+    )
+
+    column = profile.columns[0]
+
+    assert column.value_pattern == "email"
+
+    assert (
+        column.pattern_confidence
+        == 1.0
+    )
+
+    assert (
+        column.pattern_match_percentage
+        == 100.0
+    )
+
+
+def test_url_pattern_detection():
+    dataframe = pd.DataFrame(
+        {
+            "website": [
+                "https://github.com",
+                "https://google.com",
+                "https://example.com",
+                "https://openai.com",
+            ]
+        }
+    )
+
+    profiler = DatasetProfiler()
+
+    profile = profiler.profile(
+        dataframe
+    )
+
+    column = profile.columns[0]
+
+    assert column.value_pattern == "url"
+
+    assert (
+        column.pattern_confidence
+        == 1.0
+    )

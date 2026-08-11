@@ -4,6 +4,8 @@ from app.models.dataset_profile import (
     ColumnProfile,
     DatasetProfile,
 )
+from app.models.value_pattern import PatternDetection
+from app.services.pattern_detector import PatternDetector
 from app.utils.logger import get_logger
 
 
@@ -27,6 +29,10 @@ class DatasetProfiler:
 
         row_count = len(dataframe)
         column_count = len(dataframe.columns)
+
+        # ==========================================
+        # Dataset-level statistics
+        # ==========================================
 
         memory_usage = int(
             dataframe.memory_usage(
@@ -57,6 +63,10 @@ class DatasetProfiler:
             else 0.0
         )
 
+        # ==========================================
+        # Semantic type counters
+        # ==========================================
+
         numeric_count = 0
         categorical_count = 0
         datetime_count = 0
@@ -64,6 +74,12 @@ class DatasetProfiler:
         boolean_count = 0
 
         columns = []
+
+        # ==========================================
+        # Pattern detector
+        # ==========================================
+
+        pattern_detector = PatternDetector()
 
         # ==========================================
         # Profile each column
@@ -103,17 +119,17 @@ class DatasetProfiler:
 
             dtype = str(series.dtype)
 
-            # --------------------------------------
+            # ======================================
             # Semantic type detection
-            # --------------------------------------
+            # ======================================
 
             semantic_type = (
                 self._detect_semantic_type(series)
             )
 
-            # --------------------------------------
+            # ======================================
             # Identifier detection
-            # --------------------------------------
+            # ======================================
 
             (
                 is_identifier,
@@ -124,21 +140,55 @@ class DatasetProfiler:
                 cardinality_ratio,
             )
 
-            # --------------------------------------
+            # ======================================
             # Datetime detection
-            # --------------------------------------
+            # ======================================
 
             datetime_parse_success_rate = 0.0
 
             if semantic_type == "datetime":
+
                 (
                     _,
                     datetime_parse_success_rate,
                 ) = self._detect_datetime(series)
 
-            # --------------------------------------
+            # ======================================
+            # Value pattern detection
+            # ======================================
+
+            if semantic_type in {
+                "text",
+                "categorical",
+            }:
+
+                pattern_detection = (
+                    pattern_detector.detect(series)
+                )
+
+            else:
+
+                pattern_detection = PatternDetection()
+
+            value_pattern = (
+                pattern_detection.pattern
+            )
+
+            pattern_confidence = (
+                pattern_detection.confidence
+            )
+
+            pattern_match_percentage = (
+                pattern_detection.match_percentage
+            )
+
+            pattern_examples = (
+                pattern_detection.examples
+            )
+
+            # ======================================
             # Count semantic types
-            # --------------------------------------
+            # ======================================
 
             if semantic_type == "numeric":
                 numeric_count += 1
@@ -155,9 +205,9 @@ class DatasetProfiler:
             elif semantic_type == "boolean":
                 boolean_count += 1
 
-            # --------------------------------------
-            # Initialize statistics
-            # --------------------------------------
+            # ======================================
+            # Initialize column statistics
+            # ======================================
 
             min_value = None
             max_value = None
@@ -171,9 +221,9 @@ class DatasetProfiler:
             max_length = None
             average_length = None
 
-            # --------------------------------------
+            # ======================================
             # Numeric statistics
-            # --------------------------------------
+            # ======================================
 
             if semantic_type == "numeric":
 
@@ -204,9 +254,9 @@ class DatasetProfiler:
                     else:
                         std_value = 0.0
 
-            # --------------------------------------
+            # ======================================
             # Categorical statistics
-            # --------------------------------------
+            # ======================================
 
             elif semantic_type == "categorical":
 
@@ -226,9 +276,9 @@ class DatasetProfiler:
                     in value_counts.items()
                 ]
 
-            # --------------------------------------
+            # ======================================
             # Text statistics
-            # --------------------------------------
+            # ======================================
 
             elif semantic_type == "text":
 
@@ -254,9 +304,9 @@ class DatasetProfiler:
                         lengths.mean()
                     )
 
-            # --------------------------------------
+            # ======================================
             # Create column profile
-            # --------------------------------------
+            # ======================================
 
             columns.append(
                 ColumnProfile(
@@ -296,6 +346,20 @@ class DatasetProfiler:
                         datetime_parse_success_rate,
                         4,
                     ),
+
+                    value_pattern=value_pattern,
+
+                    pattern_confidence=round(
+                        pattern_confidence,
+                        4,
+                    ),
+
+                    pattern_match_percentage=round(
+                        pattern_match_percentage,
+                        2,
+                    ),
+
+                    pattern_examples=pattern_examples,
 
                     min_value=min_value,
 

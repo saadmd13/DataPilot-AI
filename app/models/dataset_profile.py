@@ -22,6 +22,15 @@ class ColumnProfile(BaseModel):
 
     datetime_parse_success_rate: float = 0.0
 
+    # Value pattern detection
+    value_pattern: str = "unknown"
+    pattern_confidence: float = 0.0
+    pattern_match_percentage: float = 0.0
+
+    pattern_examples: list[str] = Field(
+        default_factory=list
+    )
+
     # Numeric statistics
     min_value: float | None = None
     max_value: float | None = None
