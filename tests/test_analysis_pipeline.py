@@ -182,3 +182,88 @@ def test_pipeline_handles_missing_values():
         for recommendation
         in result.recommendations
     )
+def test_pipeline_includes_ml_insights():
+    dataframe = pd.DataFrame(
+        {
+            "feature": range(10),
+            "target": [
+                0,
+                1,
+                0,
+                1,
+                0,
+                1,
+                0,
+                1,
+                0,
+                1,
+            ],
+        }
+    )
+
+    analyzer = DataPilotAnalyzer()
+
+    result = analyzer.analyze(
+        dataframe,
+        filename="ml_test.csv",
+    )
+
+    assert result.ml_insights
+
+    problem_insights = [
+        insight
+        for insight in result.ml_insights
+        if insight.insight_type == "problem_type"
+    ]
+
+    assert problem_insights
+
+    assert (
+        "classification"
+        in problem_insights[0].message
+    )
+def test_pipeline_includes_ml_and_feature_insights():
+    import pandas as pd
+
+    from app.services.analysis_pipeline import (
+        DataPilotAnalyzer,
+    )
+
+    dataframe = pd.DataFrame(
+        {
+            "feature": range(1, 11),
+            "target": [
+                2,
+                4,
+                6,
+                8,
+                10,
+                12,
+                14,
+                16,
+                18,
+                20,
+            ],
+        }
+    )
+
+    result = DataPilotAnalyzer().analyze(
+        dataframe,
+        filename="integration_test.csv",
+    )
+
+    assert result.ml_insights
+
+    assert result.feature_insights
+
+    assert any(
+        insight.insight_type
+        == "target_detection"
+        for insight in result.ml_insights
+    )
+
+    assert any(
+        insight.insight_type
+        == "target_relationship"
+        for insight in result.feature_insights
+    )
