@@ -15,16 +15,23 @@ logger = get_logger(__name__)
 class DatasetProfiler:
     """Generate structured intelligence about a pandas DataFrame."""
 
+    def __init__(self) -> None:
+        """Initialize the dataset profiler."""
+
+        self.pattern_detector = PatternDetector()
+
     def profile(
         self,
         dataframe: pd.DataFrame,
         filename: str | None = None,
     ) -> DatasetProfile:
-        """Generate a dataset profile."""
+        """Generate a complete dataset profile."""
+
+        resolved_filename = filename or "unknown"
 
         logger.info(
             "Starting dataset profiling: %s",
-            filename or "unknown",
+            resolved_filename,
         )
 
         row_count = len(dataframe)
@@ -73,13 +80,7 @@ class DatasetProfiler:
         text_count = 0
         boolean_count = 0
 
-        columns = []
-
-        # ==========================================
-        # Pattern detector
-        # ==========================================
-
-        pattern_detector = PatternDetector()
+        columns: list[ColumnProfile] = []
 
         # ==========================================
         # Profile each column
@@ -89,13 +90,17 @@ class DatasetProfiler:
 
             series = dataframe[column]
 
+            # --------------------------------------
+            # Basic statistics
+            # --------------------------------------
+
             missing = int(
                 series.isna().sum()
             )
 
             unique = int(
                 series.nunique(
-                    dropna=True
+                    dropna=True,
                 )
             )
 
@@ -119,56 +124,70 @@ class DatasetProfiler:
 
             dtype = str(series.dtype)
 
-            # ======================================
-            # Semantic type detection
-            # ======================================
+            # --------------------------------------
+            # Semantic type
+            # --------------------------------------
 
             semantic_type = (
                 self._detect_semantic_type(series)
             )
 
-            # ======================================
+            # --------------------------------------
             # Identifier detection
-            # ======================================
+            # --------------------------------------
 
             (
                 is_identifier,
                 identifier_confidence,
             ) = self._detect_identifier(
-                series,
-                str(column),
-                cardinality_ratio,
+                series=series,
+                column_name=str(column),
+                cardinality_ratio=cardinality_ratio,
             )
 
-            # ======================================
+            # --------------------------------------
             # Datetime detection
-            # ======================================
+            # --------------------------------------
 
             datetime_parse_success_rate = 0.0
 
             if semantic_type == "datetime":
-
                 (
                     _,
                     datetime_parse_success_rate,
                 ) = self._detect_datetime(series)
 
-            # ======================================
-            # Value pattern detection
-            # ======================================
+            # --------------------------------------
+            # Pattern detection
+            # --------------------------------------
+            #
+            # Pattern detection is useful for
+            # structured string-like values such as:
+            #
+            # email
+            # phone
+            # URL
+            # UUID
+            # IP address
+            #
+            # We intentionally avoid running the
+            # detector on numeric, boolean, and
+            # datetime columns.
+            # --------------------------------------
+
+            pattern_detection = PatternDetection()
 
             if semantic_type in {
                 "text",
                 "categorical",
             }:
-
                 pattern_detection = (
-                    pattern_detector.detect(series)
+                    self.pattern_detector.detect(series)
                 )
 
-            else:
-
-                pattern_detection = PatternDetection()
+            # --------------------------------------
+            # Pattern values
+            # --------------------------------------
 
             value_pattern = (
                 pattern_detection.pattern
@@ -182,13 +201,13 @@ class DatasetProfiler:
                 pattern_detection.match_percentage
             )
 
-            pattern_examples = (
+            pattern_examples = list(
                 pattern_detection.examples
             )
 
-            # ======================================
-            # Count semantic types
-            # ======================================
+            # --------------------------------------
+            # Semantic counters
+            # --------------------------------------
 
             if semantic_type == "numeric":
                 numeric_count += 1
@@ -205,9 +224,9 @@ class DatasetProfiler:
             elif semantic_type == "boolean":
                 boolean_count += 1
 
-            # ======================================
-            # Initialize column statistics
-            # ======================================
+            # --------------------------------------
+            # Initialize statistics
+            # --------------------------------------
 
             min_value = None
             max_value = None
@@ -215,7 +234,7 @@ class DatasetProfiler:
             median_value = None
             std_value = None
 
-            top_values = []
+            top_values: list[dict] = []
 
             min_length = None
             max_length = None
@@ -290,7 +309,9 @@ class DatasetProfiler:
 
                 if len(text_series) > 0:
 
-                    lengths = text_series.str.len()
+                    lengths = (
+                        text_series.str.len()
+                    )
 
                     min_length = int(
                         lengths.min()
@@ -339,7 +360,7 @@ class DatasetProfiler:
 
                     identifier_confidence=round(
                         identifier_confidence,
-                        2,
+                        4,
                     ),
 
                     datetime_parse_success_rate=round(
@@ -393,7 +414,7 @@ class DatasetProfiler:
         # ==========================================
 
         profile = DatasetProfile(
-            filename=filename or "unknown",
+            filename=resolved_filename,
 
             row_count=row_count,
 
@@ -433,7 +454,8 @@ class DatasetProfiler:
         )
 
         logger.info(
-            "Dataset profiling completed: %s rows, %s columns",
+            "Dataset profiling completed: "
+            "%s rows, %s columns",
             row_count,
             column_count,
         )
@@ -448,21 +470,33 @@ class DatasetProfiler:
     def _detect_semantic_type(
         series: pd.Series,
     ) -> str:
-        """Determine a basic semantic type for a column."""
+        """Determine the semantic type of a column."""
 
+        # ------------------------------------------
         # Boolean
+        # ------------------------------------------
+
         if pd.api.types.is_bool_dtype(series):
             return "boolean"
 
-        # Already recognized datetime
+        # ------------------------------------------
+        # Native datetime
+        # ------------------------------------------
+
         if pd.api.types.is_datetime64_any_dtype(series):
             return "datetime"
 
+        # ------------------------------------------
         # Numeric
+        # ------------------------------------------
+
         if pd.api.types.is_numeric_dtype(series):
             return "numeric"
 
-        # Strings / text / categorical / datetime
+        # ------------------------------------------
+        # Strings / objects
+        # ------------------------------------------
+
         if pd.api.types.is_string_dtype(series):
 
             non_null = series.dropna()
@@ -470,8 +504,8 @@ class DatasetProfiler:
             if len(non_null) == 0:
                 return "unknown"
 
-            # Check datetime before classifying
-            # the column as text or categorical.
+            # Check whether string values represent
+            # dates before classifying them as text.
             is_datetime, _ = (
                 DatasetProfiler._detect_datetime(
                     series
@@ -481,22 +515,24 @@ class DatasetProfiler:
             if is_datetime:
                 return "datetime"
 
-            unique_count = non_null.nunique()
+            unique_count = int(
+                non_null.nunique()
+            )
 
             unique_ratio = (
                 unique_count / len(non_null)
             )
 
-            # Small-cardinality string columns
-            # are generally categorical.
+            # Small-cardinality strings are usually
+            # categorical.
             if (
                 unique_count <= 10
                 and unique_ratio <= 0.5
             ):
                 return "categorical"
 
-            # For larger datasets, a low unique
-            # ratio is a strong categorical signal.
+            # Larger datasets with very low
+            # cardinality are also categorical.
             if (
                 len(non_null) >= 20
                 and unique_ratio <= 0.05
@@ -522,7 +558,8 @@ class DatasetProfiler:
         name = column_name.lower().strip()
 
         normalized_name = (
-            name.replace("-", "_")
+            name
+            .replace("-", "_")
             .replace(" ", "_")
         )
 
@@ -551,18 +588,21 @@ class DatasetProfiler:
             cardinality_ratio >= 0.95
         )
 
-        # Strong identifier signal:
-        # explicit identifier naming + high cardinality.
-        if name_signal and cardinality_signal:
+        # Strong signal:
+        # identifier-like name + high uniqueness.
+        if (
+            name_signal
+            and cardinality_signal
+        ):
             return True, 1.0
 
-        # Moderate identifier signal:
-        # explicit identifier naming even if
-        # values are not completely unique.
+        # Moderate signal:
+        # identifier-like name alone.
         if name_signal:
             return True, 0.75
 
-        # High cardinality alone is NOT enough.
+        # High cardinality by itself does not mean
+        # the column is an identifier.
         return False, 0.0
 
     # ==============================================
@@ -584,12 +624,14 @@ class DatasetProfiler:
         if pd.api.types.is_datetime64_any_dtype(series):
             return True, 1.0
 
-        # Numeric columns should not automatically
-        # be interpreted as dates.
+        # Numeric values should not automatically be
+        # interpreted as timestamps.
         if not pd.api.types.is_string_dtype(series):
             return False, 0.0
 
-        # Parse string values using mixed-format support.
+        # Pandas 2.x supports mixed-format parsing.
+        # This avoids the dateutil warning that occurred
+        # with heterogeneous string representations.
         parsed = pd.to_datetime(
             non_null,
             errors="coerce",
