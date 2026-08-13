@@ -1,29 +1,53 @@
-from pathlib import Path
-
 from fastapi import FastAPI, File, HTTPException, UploadFile
 
+from app.api.analysis import router as analysis_router
 from app.config import settings
 from app.tools.file_loader import DatasetLoadError, load_dataset
 from app.utils.file_utils import (
-    generate_unique_filename,
     ensure_directory,
+    generate_unique_filename,
 )
 from app.utils.logger import get_logger, setup_logging
 
+
+# --------------------------------------------------
+# Logging
+# --------------------------------------------------
 
 setup_logging()
 
 logger = get_logger(__name__)
 
+
+# --------------------------------------------------
+# FastAPI Application
+# --------------------------------------------------
+
 app = FastAPI(
     title=settings.app_name,
-    description="AI-powered autonomous dataset analysis and automation platform.",
+    description=(
+        "AI-powered autonomous dataset analysis "
+        "and automation platform."
+    ),
     version="0.1.0",
 )
 
 
+# --------------------------------------------------
+# API Routers
+# --------------------------------------------------
+
+app.include_router(analysis_router)
+
+
+# --------------------------------------------------
+# Root Endpoint
+# --------------------------------------------------
+
 @app.get("/")
 def root():
+    """Return basic application information."""
+
     return {
         "name": settings.app_name,
         "version": "0.1.0",
@@ -31,15 +55,27 @@ def root():
     }
 
 
+# --------------------------------------------------
+# Health Endpoint
+# --------------------------------------------------
+
 @app.get("/health")
 def health():
+    """Return application health status."""
+
     return {
         "status": "healthy",
     }
 
 
+# --------------------------------------------------
+# Dataset Upload Endpoint
+# --------------------------------------------------
+
 @app.post("/dataset/upload")
-async def upload_dataset(file: UploadFile = File(...)):
+async def upload_dataset(
+    file: UploadFile = File(...),
+):
     """
     Upload a dataset, validate it, save it to raw storage,
     and verify that it can be loaded into pandas.
@@ -55,7 +91,9 @@ async def upload_dataset(file: UploadFile = File(...)):
         settings.project_root / settings.raw_data_dir
     )
 
-    unique_filename = generate_unique_filename(file.filename)
+    unique_filename = generate_unique_filename(
+        file.filename
+    )
 
     destination = raw_directory / unique_filename
 
@@ -65,6 +103,10 @@ async def upload_dataset(file: UploadFile = File(...)):
     )
 
     try:
+        # ------------------------------------------
+        # Read uploaded file
+        # ------------------------------------------
+
         contents = await file.read()
 
         if not contents:
@@ -72,6 +114,10 @@ async def upload_dataset(file: UploadFile = File(...)):
                 status_code=400,
                 detail="Uploaded file is empty.",
             )
+
+        # ------------------------------------------
+        # File size validation
+        # ------------------------------------------
 
         if len(contents) > settings.max_file_size_bytes:
             raise HTTPException(
@@ -82,7 +128,15 @@ async def upload_dataset(file: UploadFile = File(...)):
                 ),
             )
 
+        # ------------------------------------------
+        # Save file
+        # ------------------------------------------
+
         destination.write_bytes(contents)
+
+        # ------------------------------------------
+        # Verify dataset can be loaded
+        # ------------------------------------------
 
         dataframe = load_dataset(destination)
 
@@ -90,6 +144,10 @@ async def upload_dataset(file: UploadFile = File(...)):
             "Dataset upload successful: %s",
             unique_filename,
         )
+
+        # ------------------------------------------
+        # Response
+        # ------------------------------------------
 
         return {
             "success": True,
@@ -104,11 +162,14 @@ async def upload_dataset(file: UploadFile = File(...)):
         }
 
     except HTTPException:
+        # Remove partially processed file.
         if destination.exists():
             destination.unlink()
+
         raise
 
     except DatasetLoadError as exc:
+        # Remove invalid dataset.
         if destination.exists():
             destination.unlink()
 
@@ -123,6 +184,7 @@ async def upload_dataset(file: UploadFile = File(...)):
         ) from exc
 
     except Exception as exc:
+        # Remove file after unexpected failure.
         if destination.exists():
             destination.unlink()
 
@@ -132,5 +194,8 @@ async def upload_dataset(file: UploadFile = File(...)):
 
         raise HTTPException(
             status_code=500,
-            detail="Unexpected error while processing the dataset.",
+            detail=(
+                "Unexpected error while processing "
+                "the dataset."
+            ),
         ) from exc
