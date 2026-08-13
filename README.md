@@ -1,28 +1,29 @@
-🚀 DataPilot AI
+# 🚀 DataPilot AI
 
-«AI-powered autonomous dataset analysis and automation platform.»
+**AI-powered autonomous dataset analysis and automation platform.**
 
 DataPilot AI analyzes raw datasets, understands their structure, evaluates data quality, detects ML opportunities, and provides actionable insights and recommendations.
 
-The long-term goal is to turn it into an autonomous data analyst that can understand and automate dataset preparation.
+The long-term goal is to turn it into an **autonomous data analyst that can understand and automate dataset preparation.**
 
 ---
 
-✨ Features
+## ✨ Features
 
-- 📊 Dataset Profiling — Automatically understand rows, columns, data types, statistics, and cardinality.
-- 🧹 Data Quality Analysis — Detect missing values, duplicates, constant columns, and other quality issues.
-- 🧠 Dataset Intelligence — Generate meaningful dataset-level insights.
-- 🤖 ML Intelligence — Detect likely targets, classification/regression problems, and class imbalance.
-- 🔎 Feature Intelligence — Analyze feature-target relationships, redundancy, and potential leakage.
-- 💡 Recommendations — Generate prioritized, actionable recommendations.
-- ⚡ FastAPI API — Analyze datasets through a REST API.
-- 🧪 Tested — 83 automated tests currently passing.
+* 📊 **Dataset Profiling** — Automatically understand rows, columns, data types, statistics, and cardinality.
+* 🧹 **Data Quality Analysis** — Detect missing values, duplicates, constant columns, and other quality issues.
+* 🧠 **Dataset Intelligence** — Generate meaningful dataset-level insights.
+* 🤖 **ML Intelligence** — Detect likely targets, classification/regression problems, and class imbalance.
+* 🔎 **Feature Intelligence** — Analyze feature-target relationships, redundancy, and potential leakage.
+* 💡 **Recommendations** — Generate prioritized, actionable recommendations.
+* ⚡ **FastAPI API** — Analyze datasets through a REST API.
+* 🧪 **Tested** — 83 automated tests currently passing.
 
 ---
 
-🏗️ Architecture
+## 🏗️ Architecture
 
+```text
 Dataset
    ↓
 Dataset Profiler
@@ -42,75 +43,90 @@ Recommendations
 Analysis Result
    ↓
 FastAPI
+```
 
 ---
 
-🛠️ Tech Stack
+## 🛠️ Tech Stack
 
-Python · FastAPI · Pydantic · Pandas · NumPy · Pytest
+**Python · FastAPI · Pydantic · Pandas · NumPy · Pytest**
 
 ---
 
-🚀 Getting Started
+## 🚀 Getting Started
 
-1. Clone
+### 1. Clone
 
+```bash
 git clone https://github.com/saadmd13/DataPilot-AI.git
 cd DataPilot-AI
+```
 
-2. Create environment
+### 2. Create environment
 
+```bash
 python -m venv .venv
 .venv\Scripts\activate
+```
 
-3. Install dependencies
+### 3. Install dependencies
 
+```bash
 pip install -r requirements.txt
+```
 
-4. Run the API
+### 4. Run the API
 
+```bash
 uvicorn app.main:app --reload
+```
 
 Open:
 
+```text
 http://127.0.0.1:8000/docs
+```
 
 ---
 
-🧪 Testing
+## 🧪 Testing
 
 Run the complete test suite:
 
+```bash
 python -m pytest
+```
 
 Current status:
 
+```text
 83 passed
 0 failed
+```
 
 ---
 
-📈 Roadmap
+## 📈 Roadmap
 
-- [x] Dataset profiling
-- [x] Data quality analysis
-- [x] Dataset intelligence
-- [x] ML intelligence
-- [x] Feature intelligence
-- [x] Recommendations
-- [x] Unified analysis pipeline
-- [x] FastAPI integration
-- [ ] Automated data cleaning
-- [ ] Automated transformations
-- [ ] Feature selection
-- [ ] Processed dataset generation
-- [ ] AI-powered autonomous workflow
-- [ ] Web dashboard
+* [x] Dataset profiling
+* [x] Data quality analysis
+* [x] Dataset intelligence
+* [x] ML intelligence
+* [x] Feature intelligence
+* [x] Recommendations
+* [x] Unified analysis pipeline
+* [x] FastAPI integration
+* [ ] Automated data cleaning
+* [ ] Automated transformations
+* [ ] Feature selection
+* [ ] Processed dataset generation
+* [ ] AI-powered autonomous workflow
+* [ ] Web dashboard
 
 ---
 
-👨‍💻 Author
+## 👨‍💻 Author
 
-Saad Mohammed
+**Saad Mohammed**
 
 GitHub: https://github.com/saadmd13
