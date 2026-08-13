@@ -1,27 +1,27 @@
-# 🚀 DataPilot AI
+# DataPilot AI
 
-**AI-powered autonomous dataset analysis and automation platform.**
+**AI-powered autonomous dataset analysis and automation platform**.
 
 DataPilot AI analyzes raw datasets, understands their structure, evaluates data quality, detects ML opportunities, and provides actionable insights and recommendations.
 
-The long-term goal is to turn it into an **autonomous data analyst that can understand and automate dataset preparation.**
+The long-term goal is to build an **autonomous data analyst that can understand and automate dataset preparation.**
 
 ---
 
-## ✨ Features
+## Features
 
-* 📊 **Dataset Profiling** — Automatically understand rows, columns, data types, statistics, and cardinality.
-* 🧹 **Data Quality Analysis** — Detect missing values, duplicates, constant columns, and other quality issues.
-* 🧠 **Dataset Intelligence** — Generate meaningful dataset-level insights.
-* 🤖 **ML Intelligence** — Detect likely targets, classification/regression problems, and class imbalance.
-* 🔎 **Feature Intelligence** — Analyze feature-target relationships, redundancy, and potential leakage.
-* 💡 **Recommendations** — Generate prioritized, actionable recommendations.
-* ⚡ **FastAPI API** — Analyze datasets through a REST API.
-* 🧪 **Tested** — 83 automated tests currently passing.
+* **Dataset Profiling** — Understand rows, columns, data types, statistics, and cardinality.
+* **Data Quality Analysis** — Detect missing values, duplicates, constant columns, and other quality issues.
+* **Dataset Intelligence** — Generate meaningful dataset-level insights.
+* **ML Intelligence** — Detect likely targets, classification/regression problems, and class imbalance.
+* **Feature Intelligence** — Analyze feature-target relationships, redundancy, and potential leakage.
+* **Recommendations** — Generate prioritized and actionable recommendations.
+* **FastAPI API** — Analyze datasets through a REST API.
+* **Tested** — 83 automated tests currently passing.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```text
 Dataset
@@ -47,13 +47,13 @@ FastAPI
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 **Python · FastAPI · Pydantic · Pandas · NumPy · Pytest**
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Clone
 
@@ -89,7 +89,7 @@ http://127.0.0.1:8000/docs
 
 ---
 
-## 🧪 Testing
+## Testing
 
 Run the complete test suite:
 
@@ -106,7 +106,7 @@ Current status:
 
 ---
 
-## 📈 Roadmap
+## Roadmap
 
 * [x] Dataset profiling
 * [x] Data quality analysis
@@ -125,7 +125,7 @@ Current status:
 
 ---
 
-## 👨‍💻 Author
+## Author
 
 **Saad Mohammed**
 
