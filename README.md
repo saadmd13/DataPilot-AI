@@ -1,4 +1,3 @@
-````markdown
 # DataPilot AI
 
 **AI-powered autonomous dataset analysis and automation platform.**
